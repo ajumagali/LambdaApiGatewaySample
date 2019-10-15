@@ -28,6 +28,7 @@ resource "aws_s3_bucket_object" "static-web-content" {
   bucket = "${aws_s3_bucket.static-web-bucket.bucket}"
   key = "index.html"
   source = "../html/index.html"
+  content_type = "text/html"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
