@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Online Translater</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        function translateWithApi(e) {
+            e.preventDefault();
+
+            var sourceText = $("#source-text").val();
+            var element = document.getElementById("target-language");
+            var targetLanguage = element.options[element.selectedIndex].value;
+            var data = {
+                source: sourceText,
+                targetLanguage: targetLanguage
+            }
+
+            var callback = $.ajax({
+                type: "POST",
+                url : "https://eaadqdi6r4.execute-api.eu-west-2.amazonaws.com/test",
+                dataType: "json",
+                crossDomain: "true",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+
+                success: function (msg) {
+                    $("#target-text").val(msg.message);
+                },
+                error: function (msg) {
+                    // show an error message
+                    alert("UnSuccessfull");
+                }});
+
+        }
+    </script>
+</head>
+<body>
+
+    <h2>Online translater</h2>
+
+    <form method="get">
+        English:<br>
+        <input type="text" id="source-text" placeholder="Text..." />
+        <br>
+        Select language &nbsp
+        <select id="target-language" name="target-language">
+            <option value="kazakh">Kazakh</option>
+            <option value="russian">Russian</option>
+            <option value="turkish">Turkish</option>
+        </select>
+        <button type="button" onClick="translateWithApi(event)">Translate</button>
+        <br><br>
+        <input type="text" id="target-text" placeholder="Text..." />
+    </form>
+</body>
+</html>
