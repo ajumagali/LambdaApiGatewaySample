@@ -1,6 +1,6 @@
 #configure the AWS provider
 provider "aws" {
-  region = "eu-west-2"
+  region = "${var.region}"
 }
 
 resource "aws_s3_bucket" "static-web-bucket" {
@@ -58,4 +58,41 @@ resource "aws_lambda_function" "translator" {
   role = "${aws_iam_role.iam_for_lambda.arn}"
   runtime = "nodejs8.10"
   source_code_hash = "${filebase64sha256("../lambda/lambda.zip")}"
+}
+
+resource "aws_api_gateway_rest_api" "static-web-to-lambda-api" {
+  name = "online-translator"
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+
+resource "aws_api_gateway_resource" "translate-resource" {
+  parent_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
+  path_part = "translate"
+  rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
+}
+
+resource "aws_api_gateway_method" "post-method" {
+  authorization = "NONE"
+  http_method = "POST"
+  resource_id = "${aws_api_gateway_resource.translate-resource.id}"
+  rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
+}
+
+resource "aws_api_gateway_integration" "translate-lambda" {
+  http_method = "${aws_api_gateway_method.post-method.http_method}"
+  resource_id = "${aws_api_gateway_resource.translate-resource.id}"
+  rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
+  integration_http_method = "POST"
+  type = "AWS_PROXY"
+  uri = "${aws_lambda_function.translator.invoke_arn}"
+}
+
+resource "aws_lambda_permission" "api-gw-lambda" {
+  statement_id = "AllowExecutionFromAPIGateway"
+  action = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.translator.function_name}"
+  principal = "apigateway.amazonaws.com"
+  source_arn = "arn:aws:execute-api:${var.region}:${var.accountId}:${aws_api_gateway_rest_api.static-web-to-lambda-api.id}/*/${aws_api_gateway_method.post-method.http_method}${aws_api_gateway_resource.translate-resource.path}"
 }
