@@ -51,11 +51,11 @@ EOF
 }
 
 resource "aws_lambda_function" "translator" {
-  filename = "../lambda.zip"
-  function_name = "index"
+  filename = "../lambda/lambda.zip"
+  function_name = "online-translator"
   description = "AWS Lambda function to translate from English"
   handler = "index.handler"
   role = "${aws_iam_role.iam_for_lambda.arn}"
   runtime = "nodejs8.10"
-  source_code_hash = "${filebase64sha256("../lambda.zip")}"
+  source_code_hash = "${filebase64sha256("../lambda/lambda.zip")}"
 }
