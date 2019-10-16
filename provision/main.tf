@@ -39,23 +39,30 @@ resource "aws_api_gateway_rest_api" "static-web-to-lambda-api" {
   }
 }
 
-resource "aws_api_gateway_method" "post-method" {
+resource "aws_api_gateway_method" "http-method-any" {
   authorization = "NONE"
-  http_method = "POST"
+  http_method = "ANY"
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
 }
 
-resource "aws_api_gateway_method" "get-method" {
-  authorization = "NONE"
-  http_method = "GET"
+resource "aws_api_gateway_method_response" "response_200" {
+  http_method = "${aws_api_gateway_method.http-method-any.http_method}"
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
+  status_code = "200"
 }
 
-resource "aws_api_gateway_integration" "translate-lambda-post"{
-  http_method = "${aws_api_gateway_method.post-method.http_method}"
-  //resource_id = "${aws_api_gateway_resource.translate-resource.id}"
+
+//resource "aws_api_gateway_method" "get-method" {
+//  authorization = "NONE"
+//  http_method = "GET"
+//  resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
+//  rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
+//}
+
+resource "aws_api_gateway_integration" "apigw-lambda-intg"{
+  http_method = "${aws_api_gateway_method.http-method-any.http_method}"
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   integration_http_method = "POST"
@@ -63,26 +70,24 @@ resource "aws_api_gateway_integration" "translate-lambda-post"{
   uri = "${aws_lambda_function.translator.invoke_arn}"
 }
 
-resource "aws_api_gateway_integration" "translate-lambda-get"{
-  http_method = "${aws_api_gateway_method.get-method.http_method}"
-  //resource_id = "${aws_api_gateway_resource.translate-resource.id}"
+resource "aws_api_gateway_integration_response" "lambda-intg-resp" {
+  http_method = "${aws_api_gateway_method.http-method-any.http_method}"
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
-  integration_http_method = "GET"
-  type = "AWS"
-  uri = "${aws_lambda_function.translator.invoke_arn}"
+  status_code = "${aws_api_gateway_method_response.response_200.status_code}"
 }
 
 resource "aws_lambda_permission" "api-gw-lambda" {
-  statement_id = "AllowExecutionFromAPIGateway"
-  action = "lambda:InvokeFunction"
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.translator.function_name}"
-  principal = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${var.region}:${var.accountId}:${aws_api_gateway_rest_api.static-web-to-lambda-api.id}/*/${aws_api_gateway_method.post-method.http_method}${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
+  principal     = "apigateway.amazonaws.com"
+  //source_arn = "arn:aws:execute-api:${var.region}:${var.accountId}:${aws_api_gateway_rest_api.static-web-to-lambda-api.id}/*/${aws_api_gateway_method.post-method.http_method}${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
+  source_arn = "${aws_api_gateway_rest_api.static-web-to-lambda-api.execution_arn}/*/*/*"
 }
 
 resource "aws_api_gateway_deployment" "translator-deployment" {
-  depends_on = ["aws_api_gateway_integration.translate-lambda-post", "aws_api_gateway_integration.translate-lambda-get"]
+  depends_on = ["aws_api_gateway_integration.apigw-lambda-intg"]
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   stage_name = "test"
 }
