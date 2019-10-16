@@ -39,15 +39,15 @@ resource "aws_api_gateway_rest_api" "static-web-to-lambda-api" {
   }
 }
 
-resource "aws_api_gateway_method" "http-method-any" {
+resource "aws_api_gateway_method" "http-method-post" {
   authorization = "NONE"
-  http_method = "ANY"
+  http_method = "POST"
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
 }
 
 resource "aws_api_gateway_method_response" "response_200" {
-  http_method = "${aws_api_gateway_method.http-method-any.http_method}"
+  http_method = "${aws_api_gateway_method.http-method-post.http_method}"
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   status_code = "200"
@@ -62,7 +62,7 @@ resource "aws_api_gateway_method_response" "response_200" {
 //}
 
 resource "aws_api_gateway_integration" "apigw-lambda-intg"{
-  http_method = "${aws_api_gateway_method.http-method-any.http_method}"
+  http_method = "${aws_api_gateway_method.http-method-post.http_method}"
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   integration_http_method = "POST"
@@ -71,7 +71,7 @@ resource "aws_api_gateway_integration" "apigw-lambda-intg"{
 }
 
 resource "aws_api_gateway_integration_response" "lambda-intg-resp" {
-  http_method = "${aws_api_gateway_method.http-method-any.http_method}"
+  http_method = "${aws_api_gateway_method.http-method-post.http_method}"
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   status_code = "${aws_api_gateway_method_response.response_200.status_code}"
@@ -82,7 +82,6 @@ resource "aws_lambda_permission" "api-gw-lambda" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.translator.function_name}"
   principal     = "apigateway.amazonaws.com"
-  //source_arn = "arn:aws:execute-api:${var.region}:${var.accountId}:${aws_api_gateway_rest_api.static-web-to-lambda-api.id}/*/${aws_api_gateway_method.post-method.http_method}${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   source_arn = "${aws_api_gateway_rest_api.static-web-to-lambda-api.execution_arn}/*/*/*"
 }
 
