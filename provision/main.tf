@@ -67,8 +67,7 @@ resource "aws_api_gateway_integration" "post-integration"{
   uri = "${aws_lambda_function.translator.invoke_arn}"
   depends_on = [
     "aws_api_gateway_method.post-method",
-    "aws_lambda_function.translator",
-    "aws_lambda_permission.lambda-permission"
+    "aws_lambda_function.translator"
   ]
 }
 
@@ -77,7 +76,10 @@ resource "aws_api_gateway_integration_response" "post-integration-response" {
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   status_code = "${aws_api_gateway_method_response.post-200.status_code}"
-  depends_on = ["aws_api_gateway_method_response.post-200"]
+  depends_on = [
+    "aws_api_gateway_method_response.post-200",
+    "aws_api_gateway_integration.post-integration"
+  ]
 }
 
 resource "aws_api_gateway_method" "get-method" {
@@ -107,8 +109,7 @@ resource "aws_api_gateway_integration" "get-integration"{
   uri = "${aws_lambda_function.translator.invoke_arn}"
   depends_on = [
     "aws_api_gateway_method.get-method",
-    "aws_lambda_function.translator",
-    "aws_lambda_permission.lambda-permission"
+    "aws_lambda_function.translator"
   ]
 }
 
@@ -117,7 +118,10 @@ resource "aws_api_gateway_integration_response" "get-integration-response" {
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   status_code = "${aws_api_gateway_method_response.post-200.status_code}"
-  depends_on = ["aws_api_gateway_method_response.get-200"]
+  depends_on = [
+    "aws_api_gateway_method_response.get-200",
+    "aws_api_gateway_integration.get-integration"
+  ]
 }
 
 module "apigateway-cors" {
@@ -127,17 +131,18 @@ module "apigateway-cors" {
   api = aws_api_gateway_rest_api.static-web-to-lambda-api.id
   resources = [aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id]
 
-  methods = ["GET", "POST"]
+  methods = ["GET", "POST", "OPTIONS"]
 }
 
 resource "aws_api_gateway_deployment" "translator-deployment" {
+  depends_on = [
+    "aws_api_gateway_integration_response.post-integration-response",
+    "aws_api_gateway_integration_response.get-integration-response",
+    "aws_api_gateway_integration.get-integration",
+    "aws_api_gateway_integration.post-integration"
+  ]
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   stage_name = "test"
-
-  depends_on = [
-    "aws_api_gateway_integration.post-integration",
-    "aws_api_gateway_integration.get-integration"
-  ]
 }
 
 resource "aws_lambda_permission" "lambda-permission" {
