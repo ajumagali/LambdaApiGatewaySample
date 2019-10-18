@@ -30,7 +30,11 @@ exports.handler = async (event, context) => {
 
     console.log('Received event:', event);
     var response = {
-        "message" : msg
+        "message" : msg,
+        "headers" : {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin' : '*'
+        }
     }
     return response;
 };

@@ -55,6 +55,9 @@ resource "aws_api_gateway_method_response" "post-200" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = true
   }
+  response_models = {
+    "application/json" = "Empty"
+  }
   depends_on = ["aws_api_gateway_method.post-method"]
 }
 
@@ -80,6 +83,12 @@ resource "aws_api_gateway_integration_response" "post-integration-response" {
     "aws_api_gateway_method_response.post-200",
     "aws_api_gateway_integration.post-integration"
   ]
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+  response_templates = {
+    "application/json" = ""
+  }
 }
 
 resource "aws_api_gateway_method" "get-method" {
@@ -94,10 +103,15 @@ resource "aws_api_gateway_method_response" "get-200" {
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   status_code = "200"
+
+  depends_on = ["aws_api_gateway_method.get-method"]
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = true
   }
-  depends_on = ["aws_api_gateway_method.get-method"]
+  response_models = {
+    "application/json" = "Empty"
+  }
 }
 
 resource "aws_api_gateway_integration" "get-integration"{
@@ -122,6 +136,12 @@ resource "aws_api_gateway_integration_response" "get-integration-response" {
     "aws_api_gateway_method_response.get-200",
     "aws_api_gateway_integration.get-integration"
   ]
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+  response_templates = {
+    "application/json" = ""
+  }
 }
 
 module "apigateway-cors" {
@@ -130,8 +150,11 @@ module "apigateway-cors" {
   # insert the 3 required variables here
   api = aws_api_gateway_rest_api.static-web-to-lambda-api.id
   resources = [aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id]
+  methods = ["GET", "OPTIONS", "POST"]
 
-  methods = ["GET", "POST", "OPTIONS"]
+  enable = "true"
+  headers = ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token"]
+  origin = "*"
 }
 
 resource "aws_api_gateway_deployment" "translator-deployment" {
@@ -139,7 +162,8 @@ resource "aws_api_gateway_deployment" "translator-deployment" {
     "aws_api_gateway_integration_response.post-integration-response",
     "aws_api_gateway_integration_response.get-integration-response",
     "aws_api_gateway_integration.get-integration",
-    "aws_api_gateway_integration.post-integration"
+    "aws_api_gateway_integration.post-integration",
+    "module.apigateway-cors"
   ]
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   stage_name = "test"
