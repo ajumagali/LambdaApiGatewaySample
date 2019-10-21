@@ -18,11 +18,12 @@
 
             var callback = $.ajax({
                 type: "POST",
-                url : "###api-gateway-endpoint###",
+                //url : "###api-gateway-endpoint###",
+                url : "https://favmyhib5b.execute-api.eu-west-2.amazonaws.com/test?source="+sourceText+"&targetLanguage="+targetLanguage,
                 dataType: "json",
                 crossDomain: "true",
                 contentType: "application/json; charset=utf-8",
-                data: JSON.stringify(data),
+                body: JSON.stringify(data),
 
                 success: function (msg) {
                     $("#target-text").val(msg.message);
