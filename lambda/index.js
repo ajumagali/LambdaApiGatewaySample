@@ -15,10 +15,14 @@ exports.handler = async (event, context) => {
     var targetLanguage = "";
     var sourceText = "";
 
-    if (event.queryStringParameters && event.queryStringParameters.targetLanguage)
-        targetLanguage = event.queryStringParameters.targetLanguage.toLowerCase();
-    if (event.queryStringParameters && event.queryStringParameters.source)
-        sourceText = event.queryStringParameters.source.toLowerCase();
+    if (event.body) {
+        var body = JSON.parse(event.body);
+
+        if (body.targetLanguage)
+            targetLanguage = body.targetLanguage.toLowerCase();
+        if (body.source)
+            sourceText = body.source.toLowerCase();
+    }
 
     var msg = sourceText;
 
