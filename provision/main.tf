@@ -66,7 +66,7 @@ resource "aws_api_gateway_integration" "post-integration"{
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   integration_http_method = "POST"
-  type = "AWS"
+  type = "AWS_PROXY"
   uri = "${aws_lambda_function.translator.invoke_arn}"
   depends_on = [
     "aws_api_gateway_method.post-method",
@@ -119,7 +119,7 @@ resource "aws_api_gateway_integration" "get-integration"{
   resource_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.static-web-to-lambda-api.id}"
   integration_http_method = "POST"
-  type = "AWS"
+  type = "AWS_PROXY"
   uri = "${aws_lambda_function.translator.invoke_arn}"
   depends_on = [
     "aws_api_gateway_method.get-method",
@@ -147,7 +147,6 @@ resource "aws_api_gateway_integration_response" "get-integration-response" {
 module "apigateway-cors" {
   source  = "bridgecrewio/apigateway-cors/aws"
   version = "1.1.0"
-  # insert the 3 required variables here
   api = aws_api_gateway_rest_api.static-web-to-lambda-api.id
   resources = [aws_api_gateway_rest_api.static-web-to-lambda-api.root_resource_id]
   methods = ["GET", "OPTIONS", "POST"]
@@ -174,7 +173,6 @@ resource "aws_lambda_permission" "lambda-permission" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.translator.function_name}"
   principal     = "apigateway.amazonaws.com"
-  //source_arn = "${aws_api_gateway_rest_api.static-web-to-lambda-api.execution_arn}/*/*/*"
   source_arn = "arn:aws:execute-api:${var.region}:${var.accountId}:${aws_api_gateway_rest_api.static-web-to-lambda-api.id}/*/*/"
 
   depends_on = ["aws_api_gateway_rest_api.static-web-to-lambda-api"]

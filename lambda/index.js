@@ -1,3 +1,5 @@
+'use strict';
+
 console.log('Loading function');
 
 var englishToRussianMap = new Map();
@@ -10,8 +12,14 @@ exports.handler = async (event, context) => {
     initKazakh();
     initTurkish();
 
-    var targetLanguage = event.targetLanguage.toLowerCase();
-    var sourceText = event.source.toLowerCase();
+    var targetLanguage = "";
+    var sourceText = "";
+
+    if (event.queryStringParameters && event.queryStringParameters.targetLanguage)
+        targetLanguage = event.queryStringParameters.targetLanguage.toLowerCase();
+    if (event.queryStringParameters && event.queryStringParameters.source)
+        sourceText = event.queryStringParameters.source.toLowerCase();
+
     var msg = sourceText;
 
     switch (targetLanguage) {
@@ -29,13 +37,19 @@ exports.handler = async (event, context) => {
     }
 
     console.log('Received event:', event);
+    var responseBody = {
+        "message" : msg
+    };
     var response = {
-        "message" : msg,
+        "statusCode" : 200,
         "headers" : {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin' : '*'
-        }
-    }
+        },
+        "body" : JSON.stringify(responseBody)
+
+    };
+    console.log("response: " + JSON.stringify(response))
     return response;
 };
 
