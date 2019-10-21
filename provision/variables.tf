@@ -10,5 +10,5 @@ variable "region" {
 
 variable "accountId" {
   description = "AWS account ID"
-  default = "870594606895"
+  default = "add me"
 }
