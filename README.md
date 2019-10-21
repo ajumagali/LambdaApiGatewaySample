@@ -1,5 +1,5 @@
 # LambdaApiGatewaySample
-This project creates deploy a simple [AWS Lambda](https://aws.amazon.com/lambda/) function that receives a word in English and translates it to a selected language (i.e., Kazakh, Russian, and Turkish).
+This project deploys a simple [AWS Lambda](https://aws.amazon.com/lambda/) function that receives a word in English and translates it to a selected language (i.e., Kazakh, Russian, and Turkish).
 
 The architecture is straightforward and it consists of an HTML page with Javascript with the [Lambda Proxy Integration](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html) using [Amazon API Gateway](https://aws.amazon.com/api-gateway/).
 
